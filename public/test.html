@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test | Vstand4U</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #0d1520; --card: #162032; --border: #1e2d4a; --accent: #13a3ff; --accent2: #0d7abf; --text: #f1f5f9; --muted: #64748b; --success: #22c55e; --error: #ef4444; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; border-bottom: 1px solid var(--border); }
+  .nav-logo { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.2rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .timer { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+  .timer.warning { color: var(--error); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.5 } }
+
+  .main { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+
+  #loadingMsg { text-align: center; padding: 3rem; color: var(--muted); }
+  #blockedMsg { text-align: center; padding: 3rem; }
+  #blockedMsg h2 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; margin-bottom: 1rem; }
+  #blockedMsg p { color: var(--muted); margin-bottom: 1.5rem; }
+  .back-link { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+  .test-header { margin-bottom: 2rem; }
+  .test-header h1 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; }
+  .test-header p { color: var(--muted); margin-top: 0.3rem; }
+
+  .question-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.75rem; margin-bottom: 1.25rem; }
+  .q-num { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+  .q-text { font-size: 1rem; font-weight: 500; line-height: 1.6; margin-bottom: 1.25rem; }
+  .options { display: flex; flex-direction: column; gap: 0.6rem; }
+  .option-label {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+    border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+    transition: all 0.15s; font-size: 0.95rem;
+  }
+  .option-label:hover { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+  .option-label input[type="radio"] { accent-color: var(--accent); width: 16px; height: 16px; }
+  .option-label:has(input:checked) { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+
+  .submit-section { text-align: center; padding: 1.5rem 0; }
+  .submit-btn {
+    padding: 0.9rem 3rem; border: none; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white; font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s, transform 0.2s;
+  }
+  .submit-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+  /* RESULT */
+  #resultSection { text-align: center; padding: 3rem 1.5rem; display: none; }
+  .result-icon { font-size: 4rem; margin-bottom: 1rem; }
+  .result-score { font-family: 'Outfit', sans-serif; font-size: 4rem; font-weight: 800; margin: 1rem 0; }
+  .result-score.pass { color: var(--success); }
+  .result-score.fail { color: var(--error); }
+  .result-msg { font-size: 1.1rem; color: var(--muted); margin-bottom: 2rem; }
+  .result-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .result-btn {
+    padding: 0.8rem 2rem; border-radius: 10px; text-decoration: none;
+    font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.95rem; transition: opacity 0.2s;
+  }
+  .result-btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+  .result-btn.secondary { border: 1px solid var(--border); color: var(--muted); }
+  .result-btn:hover { opacity: 0.85; }
+
+  /* Custom cursor */
+  * { cursor: none !important; }
+  .cursor-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); }
+  .cursor-ring { width: 32px; height: 32px; border: 2px solid rgba(19,163,255,0.5); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: all 0.12s ease-out; }
+  .cursor-ring.hover { width: 48px; height: 48px; background: rgba(19,163,255,0.08); border-color: var(--accent); }
+  /* Button animations */
+  .btn, button { transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1) !important; position: relative; overflow: hidden; }
+  .btn:hover, button:hover { transform: translateY(-2px) scale(1.02) !important; box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important; }
+  .btn:active, button:active { transform: scale(0.97) !important; }
+  .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,0.35); transform: scale(0); animation: ripple-anim 0.6s linear; pointer-events: none; }
+  @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+
+  footer{width:100%;text-align:center;padding:1.5rem 2rem;border-top:1px solid rgba(19,163,255,.08);margin-top:3rem}
+  .footer-brand{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:-.02em;margin-bottom:.6rem}
+  .footer-brand .v-u{color:#13a3ff}.footer-brand .stand{color:white}
+  .footer-info{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1rem;font-size:.76rem;color:#7a90a8;line-height:1.6}
+  .footer-info a{color:#7a90a8;text-decoration:none}.footer-info a:hover{color:#13a3ff}
+  .footer-sep{color:rgba(255,255,255,.1)}
+  .footer-copy{margin-top:.6rem;font-size:.7rem;color:#2d4060}
+
+
+  /* Page entry animation */
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes blobFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-20px) scale(1.03)}}
+  .main,.page-content{animation:fadeInUp .5s ease both}
+  nav{animation:fadeInUp .4s ease both}
+  /* Animated background blobs */
+  .bg-blob{position:fixed;border-radius:50%;filter:blur(90px);opacity:.09;pointer-events:none;z-index:0;animation:blobFloat 10s ease-in-out infinite}
+  .bg-blob.b1{width:500px;height:500px;background:radial-gradient(circle,#13a3ff,transparent);top:-100px;right:-100px}
+  .bg-blob.b2{width:400px;height:400px;background:radial-gradient(circle,#7c3aed,transparent);bottom:-100px;left:-100px;animation-delay:-5s}
+  .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(19,163,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(19,163,255,.025) 1px,transparent 1px);background-size:55px 55px;z-index:0;pointer-events:none}
+  /* Card hover lift */
+  .video-card,.stat-card{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,border-color .3s!important}
+  .video-card:hover{transform:translateY(-6px) scale(1.01)!important;box-shadow:0 20px 50px rgba(0,0,0,.4)!important}
+  .stat-card:hover{transform:translateY(-4px)!important}
+  /* Button glow pulse */
+  @keyframes btnPulse{0%,100%{box-shadow:0 4px 20px rgba(19,163,255,.3)}50%{box-shadow:0 4px 30px rgba(19,163,255,.55)}}
+  .watch-btn,.test-btn,.complete-btn.ready{animation:btnPulse 2.5s ease-in-out infinite}
+  /* Nav logo bigger */
+  .nav-logo{font-size:1.6rem!important}
+
+</style>
+</head>
+<body>
+<div class="bg-blob b1"></div><div class="bg-blob b2"></div><div class="bg-grid"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <div class="nav-logo" style="display:flex;align-items:center;gap:10px"><img src="/vs4u_logo.png" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(19,163,255,0.4)"><span style="color:#13a3ff">V</span><span style="color:white">stand4</span><span style="color:#13a3ff">U</span></div>
+  <div class="timer" id="timerDisplay">⏱ 20:00</div>
+</nav>
+
+<div class="main">
+  <div id="loadingMsg">Loading test questions...</div>
+  <div id="blockedMsg" style="display:none">
+    <h2>🔒 Test Locked</h2>
+    <p>You must complete all video modules before taking the test.</p>
+    <a href="/dashboard.html" class="back-link">← Go to Dashboard</a>
+  </div>
+  <div id="testContent" style="display:none">
+    <div class="test-header">
+      <h1>📝 Final Assessment</h1>
+      <p>Answer all questions. Pass mark is 70%. Timer is running!</p>
+    </div>
+    <div id="questionsContainer"></div>
+    <div class="submit-section">
+      <button class="submit-btn" onclick="submitTest()">Submit Test →</button>
+    </div>
+  </div>
+  <div id="resultSection">
+    <div class="result-icon" id="resultIcon"></div>
+    <h2 id="resultTitle" style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:0.5rem"></h2>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="result-btns" id="resultBtns"></div>
+  </div>
+</div>
+
+<script>
+let questions = [];
+let timerInterval;
+let secondsLeft = 20 * 60;
+
+async function init() {
+  const res = await fetch("/get-questions");
+  const data = await res.json();
+
+  document.getElementById("loadingMsg").style.display = "none";
+
+  if (!data.allowed) {
+    document.getElementById("blockedMsg").style.display = "block"; return;
+  }
+
+  questions = data.questions;
+  document.getElementById("testContent").style.display = "block";
+  renderQuestions();
+  startTimer();
+}
+
+function renderQuestions() {
+  const container = document.getElementById("questionsContainer");
+  container.innerHTML = questions.map((q, i) => `
+    <div class="question-card">
+      <div class="q-num">Question ${i + 1} of ${questions.length}</div>
+      <div class="q-text">${q.question}</div>
+      <div class="options">
+        ${q.options.map((opt, j) => `
+          <label class="option-label">
+            <input type="radio" name="q_${q._id}" value="${j}">
+            ${opt}
+          </label>`).join("")}
+      </div>
+    </div>`).join("");
+}
+
+function startTimer() {
+  const display = document.getElementById("timerDisplay");
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    const m = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
+    const s = (secondsLeft % 60).toString().padStart(2, "0");
+    display.textContent = `⏱ ${m}:${s}`;
+    if (secondsLeft <= 60) display.classList.add("warning");
+    if (secondsLeft <= 0) { clearInterval(timerInterval); submitTest(); }
+  }, 1000);
+}
+
+async function submitTest() {
+  clearInterval(timerInterval);
+  const answers = {};
+  questions.forEach(q => {
+    const sel = document.querySelector(`input[name="q_${q._id}"]:checked`);
+    if (sel) answers[q._id] = sel.value;
+  });
+
+  const res = await fetch("/submit-test", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answers })
+  });
+  const data = await res.json();
+
+  document.getElementById("testContent").style.display = "none";
+  const resultSection = document.getElementById("resultSection");
+  resultSection.style.display = "block";
+
+  document.getElementById("resultIcon").textContent = data.passed ? "🎉" : "😔";
+  document.getElementById("resultTitle").textContent = data.passed ? "Congratulations!" : "Better luck next time!";
+  document.getElementById("resultScore").textContent = data.score + "%";
+  document.getElementById("resultScore").className = "result-score " + (data.passed ? "pass" : "fail");
+  document.getElementById("resultMsg").textContent =
+    `You got ${data.correct} out of ${data.total} correct. ` +
+    (data.passed ? "You've earned your certificate!" : "You need 70% to pass. Try again after reviewing the videos.");
+
+  let btns = `<a href="/dashboard.html" class="result-btn secondary">← Dashboard</a>`;
+  if (data.passed) btns += `<a href="/certificate.html" class="result-btn primary">📜 Get Certificate</a>`;
+  document.getElementById("resultBtns").innerHTML = btns;
+}
+
+init();
+</script>
+
+<script>
+const _dot = document.getElementById('cursorDot');
+const _ring = document.getElementById('cursorRing');
+let _mx=0,_my=0,_rx=0,_ry=0;
+document.addEventListener('mousemove',e=>{_mx=e.clientX;_my=e.clientY;_dot.style.left=_mx+'px';_dot.style.top=_my+'px';});
+function _animRing(){_rx+=(_mx-_rx)*0.14;_ry+=(_my-_ry)*0.14;_ring.style.left=_rx+'px';_ring.style.top=_ry+'px';requestAnimationFrame(_animRing);}
+_animRing();
+document.addEventListener('mouseover',e=>{if(e.target.matches('a,button,.btn'))_ring.classList.add('hover');else _ring.classList.remove('hover');});
+document.querySelectorAll('button,.btn').forEach(btn=>{
+  btn.addEventListener('click',function(e){
+    const r=document.createElement('span');r.className='ripple';
+    const rect=this.getBoundingClientRect();const size=Math.max(rect.width,rect.height);
+    r.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+    this.appendChild(r);setTimeout(()=>r.remove(),600);
+  });
+});
+</script>
+<footer>
+  <div class="footer-brand"><span class="v-u">V</span><span class="stand">stand4</span><span class="v-u">U</span> Technologies</div>
+  <div class="footer-info"><span>📍 2nd & 3rd Floor, MTR Complex, 3968/3, Outer Ring Rd, Kasturi Nagar, Bengaluru, KA 560043</span></div>
+  <div class="footer-info" style="margin-top:.4rem">
+    <span>✉️ <a href="mailto:info@vstand4utechnologies.com">info@vstand4utechnologies.com</a></span>
+    <span class="footer-sep">|</span>
+    <span>📞 <a href="tel:08217453635">082174 53635</a></span>
+    <span class="footer-sep">|</span>
+    <span>🛠 Support: <a href="tel:9353669364">9353669364</a></span>
+  </div>
+  <div class="footer-copy">© 2024 Vstand4U Technologies. All rights reserved.</div>
+</footer>
+</body>
+</html>
