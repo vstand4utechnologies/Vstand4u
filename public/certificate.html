@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate | Vstand4U Technologies Pvt. Ltd</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f4f1eb; --text: #1a1410; --muted: #7a6e62;
+    --accent: #13a3ff; --gold: #b8861b; --card-bg: #fffdf8; --border: #e2d9c8;
+  }
+  * { cursor: none !important; }
+  .cursor-dot { width: 7px; height: 7px; background: var(--gold); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); }
+  .cursor-ring { width: 28px; height: 28px; border: 1.5px solid rgba(184,134,27,0.5); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: all 0.12s ease-out; }
+  .cursor-ring.hover { width: 44px; height: 44px; background: rgba(184,134,27,0.06); border-color: var(--gold); }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-y: auto; }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 2.5rem; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.2rem; }
+  .nav-logo .v-u { color: #13a3ff; }
+  .back-btn { color: var(--muted); text-decoration: none; font-size: 0.88rem; font-weight: 500; display: flex; align-items: center; gap: 0.4rem; }
+  .back-btn:hover { color: var(--text); }
+  .page { max-width: 920px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+  #loadingMsg { text-align: center; color: var(--muted); padding: 4rem; }
+  #blockedMsg { display: none; text-align: center; padding: 4rem 2rem; }
+  #blockedMsg .icon { font-size: 3rem; margin-bottom: 1rem; }
+  #blockedMsg h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 700; margin-bottom: .75rem; }
+  #blockedMsg p { color: var(--muted); margin-bottom: 2rem; line-height: 1.6; }
+  .link-btn { display: inline-block; padding: .75rem 1.75rem; background: var(--text); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-family: 'Outfit', sans-serif; }
+  #certSection { display: none; }
+  .cert-header-text { text-align: center; margin-bottom: 2.5rem; }
+  .cert-header-text h1 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 700; margin-bottom: .4rem; }
+  .cert-header-text p { color: var(--muted); font-size: .9rem; }
+  .cert-wrap { margin-bottom: 2.5rem; }
+  .cert-card {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,.04), 0 8px 32px rgba(0,0,0,.07), 0 0 0 6px white, 0 0 0 7px var(--border);
+    animation: fadeUp .6s ease forwards;
+  }
+  .cert-topband { height: 6px; background: linear-gradient(90deg,#1a1410 0%,#b8861b 40%,#13a3ff 70%,#1a1410 100%); }
+  .cert-body { padding: 2.5rem 3.5rem; position: relative; }
+  .cert-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Outfit', sans-serif; font-size: 9rem; font-weight: 900; color: rgba(184,134,27,.04); pointer-events: none; white-space: nowrap; user-select: none; }
+  .corner { position: absolute; width: 48px; height: 48px; }
+  .corner svg { width: 100%; height: 100%; }
+  .corner.tl { top: 16px; left: 16px; } .corner.tr { top: 16px; right: 16px; transform: scaleX(-1); }
+  .corner.bl { bottom: 16px; left: 16px; transform: scaleY(-1); } .corner.br { bottom: 16px; right: 16px; transform: scale(-1); }
+
+  /* Logo row */
+  .cert-logo-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); gap: 1rem; }
+  .cert-logo-external { height: 48px; width: auto; object-fit: contain; display: block; }
+  .cert-company-center { text-align: center; flex: 1; }
+  .cert-company-name { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.1rem; }
+  .cert-company-name .v-u { color: #13a3ff; }
+  .cert-company-sub { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-top: 0.1rem; }
+
+  .cert-issued-by { font-family: 'Outfit', sans-serif; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: .5rem; }
+  .cert-main-title { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 600; text-align: center; margin-bottom: .4rem; }
+  .cert-subtitle { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; color: var(--muted); text-align: center; margin-bottom: 1.75rem; }
+  .cert-divider { display: flex; align-items: center; gap: 1rem; margin: 0 auto 1.75rem; max-width: 420px; }
+  .cert-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .cert-divider-diamond { width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); }
+  .cert-presented { font-size: .82rem; color: var(--muted); text-align: center; text-transform: uppercase; letter-spacing: .14em; margin-bottom: .85rem; }
+  .cert-name { font-family: 'Cormorant Garamond', serif; font-size: 3rem; font-weight: 700; text-align: center; line-height: 1.1; margin-bottom: .5rem; }
+  .cert-name-underline { width: 200px; height: 1.5px; background: linear-gradient(90deg,transparent,var(--gold),transparent); margin: 0 auto 1.5rem; }
+  .cert-for-text { font-size: .85rem; color: var(--muted); text-align: center; margin-bottom: .4rem; }
+  .cert-course-name { font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700; text-align: center; margin-bottom: 1.75rem; }
+  .cert-info-row { display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr; max-width: 500px; margin: 0 auto 1.75rem; }
+  .cert-divider-v { background: var(--border); }
+  .cert-info-item { text-align: center; padding: 0 1.5rem; }
+  .cert-info-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin-bottom: .35rem; font-weight: 600; }
+  .cert-info-value { font-family: 'Outfit', sans-serif; font-size: .85rem; font-weight: 700; }
+
+  /* Signature row — CEO only, centered */
+  .cert-sig-row { display: flex; justify-content: center; align-items: flex-end; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .cert-sig-block { text-align: center; }
+  .ceo-sig-img { height: 64px; width: auto; display: block; margin: 0 auto 0.25rem; object-fit: contain; mix-blend-mode: multiply; }
+  .cert-sig-line { width: 180px; height: 1px; background: #1a1410; margin: 0 auto .4rem; }
+  .cert-sig-name { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-style: italic; font-weight: 600; color: var(--text); margin-bottom: .15rem; }
+  .cert-sig-label { font-size: .62rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-weight: 600; }
+  .cert-sig-company { font-size: .7rem; color: var(--muted); margin-top: .2rem; }
+
+  .cert-bottomband { height: 3px; background: linear-gradient(90deg,transparent,var(--gold),transparent); opacity: .5; }
+
+  .action-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; animation: fadeUp .6s .2s ease both; }
+  .action-btn { display: inline-flex; align-items: center; gap: .5rem; padding: .85rem 2rem; border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: .92rem; font-weight: 700; border: none; text-decoration: none; transition: all .25s cubic-bezier(.34,1.56,.64,1); position: relative; overflow: hidden; cursor: none !important; }
+  .action-btn.primary { background: var(--text); color: white; box-shadow: 0 4px 16px rgba(26,20,16,.2); }
+  .action-btn.primary:hover { transform: translateY(-2px); }
+  .action-btn.secondary { background: white; color: var(--text); border: 1.5px solid var(--border); }
+  .action-btn.secondary:hover { transform: translateY(-2px); border-color: var(--text); }
+  .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.3); transform: scale(0); animation: ripple-anim .6s linear; pointer-events: none; }
+  @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width:640px) {
+    .cert-body { padding: 1.5rem 1.2rem; }
+    .cert-main-title { font-size: 1.8rem; }
+    .cert-name { font-size: 2.2rem; }
+    .cert-info-row { grid-template-columns: 1fr; gap: 1rem; }
+    .cert-divider-v { display: none; }
+    .cert-logo-row { flex-direction: column; align-items: center; gap: .75rem; }
+  }
+  footer{width:100%;text-align:center;padding:1.5rem 2rem;border-top:1px solid rgba(19,163,255,.08);margin-top:3rem}
+  .footer-brand{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:-.02em;margin-bottom:.6rem}
+  .footer-brand .v-u{color:#13a3ff}.footer-brand .stand{color:white}
+  .footer-info{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1rem;font-size:.76rem;color:#7a90a8;line-height:1.6}
+  .footer-info a{color:#7a90a8;text-decoration:none}.footer-info a:hover{color:#13a3ff}
+  .footer-sep{color:rgba(255,255,255,.1)}
+  .footer-copy{margin-top:.6rem;font-size:.7rem;color:#2d4060}
+</style>
+</head>
+<body>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <div class="nav-logo"><span class="v-u">V</span><span>stand4</span><span class="v-u">U</span> <span style="font-size:.72rem;font-weight:500;color:var(--muted)">Technologies Pvt. Ltd</span></div>
+  <a href="/dashboard.html" class="back-btn">← Dashboard</a>
+</nav>
+
+<div class="page">
+  <div id="loadingMsg">Loading your certificate…</div>
+  <div id="blockedMsg">
+    <div class="icon">🔒</div>
+    <h2>Certificate Not Yet Earned</h2>
+    <p>Complete all videos and pass the final test with 70% or above to unlock your certificate.</p>
+    <a href="/dashboard.html" class="link-btn">← Back to Dashboard</a>
+  </div>
+
+  <div id="certSection">
+    <div class="cert-header-text">
+      <h1>🎉 Congratulations!</h1>
+      <p>Your certificate is ready. Download or share it below.</p>
+    </div>
+
+    <div class="cert-wrap">
+      <div class="cert-card" id="certPreview">
+        <div class="cert-topband"></div>
+        <div class="cert-body">
+          <div class="cert-watermark">V4U</div>
+          <div class="corner tl"><svg viewBox="0 0 48 48" fill="none"><path d="M4 4 L4 20 M4 4 L20 4" stroke="#b8861b" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4 L4 44 M4 4 L44 4" stroke="#e2d9c8" stroke-width="0.5"/><circle cx="4" cy="4" r="2.5" fill="#b8861b"/></svg></div>
+          <div class="corner tr"><svg viewBox="0 0 48 48" fill="none"><path d="M4 4 L4 20 M4 4 L20 4" stroke="#b8861b" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4 L4 44 M4 4 L44 4" stroke="#e2d9c8" stroke-width="0.5"/><circle cx="4" cy="4" r="2.5" fill="#b8861b"/></svg></div>
+          <div class="corner bl"><svg viewBox="0 0 48 48" fill="none"><path d="M4 4 L4 20 M4 4 L20 4" stroke="#b8861b" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4 L4 44 M4 4 L44 4" stroke="#e2d9c8" stroke-width="0.5"/><circle cx="4" cy="4" r="2.5" fill="#b8861b"/></svg></div>
+          <div class="corner br"><svg viewBox="0 0 48 48" fill="none"><path d="M4 4 L4 20 M4 4 L20 4" stroke="#b8861b" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4 L4 44 M4 4 L44 4" stroke="#e2d9c8" stroke-width="0.5"/><circle cx="4" cy="4" r="2.5" fill="#b8861b"/></svg></div>
+
+          <!-- Logo Row -->
+          <div class="cert-logo-row">
+            <!-- Startup India logo from Facebook page -->
+            <img src="https://www.startupindia.gov.in/content/dam/invest-india/newhomepage/DPIIT-header.png"
+                 onerror="this.onerror=null;this.src='';this.parentElement.innerHTML='<div style=&quot;background:#FF6B35;color:white;font-family:Outfit,sans-serif;font-weight:900;font-size:0.8rem;padding:0.4rem 0.8rem;border-radius:6px;text-align:center;line-height:1.3&quot;>STARTUP<br>INDIA</div>'"
+                 class="cert-logo-external" alt="Startup India" style="max-width:130px">
+
+            <div class="cert-company-center">
+              <div class="cert-company-name"><span class="v-u">V</span><span>stand4</span><span class="v-u">U</span></div>
+              <div class="cert-company-sub">Technologies Pvt. Ltd</div>
+            </div>
+
+            <!-- MSME logo from seeklogo -->
+            <img src="https://seeklogo.com/vector-logo/480293/msme"
+                 onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Ministry_of_MSME_Logo.svg/220px-Ministry_of_MSME_Logo.svg.png';this.onerror=function(){this.parentElement.innerHTML='<div style=&quot;background:#1a4a9b;color:white;font-family:Outfit,sans-serif;font-weight:900;font-size:0.8rem;padding:0.4rem 0.8rem;border-radius:6px;text-align:center;line-height:1.3&quot;>MSME</div>'}"
+                 class="cert-logo-external" alt="MSME" style="max-width:120px">
+          </div>
+
+          <!-- Cert content -->
+          <div class="cert-issued-by">Vstand4U Technologies Pvt. Ltd &nbsp;·&nbsp; Certificate of Achievement</div>
+          <div class="cert-main-title">Certificate of Completion</div>
+          <div class="cert-subtitle">Awarded in recognition of successful course completion</div>
+
+          <div class="cert-divider">
+            <div class="cert-divider-line"></div><div class="cert-divider-diamond"></div><div class="cert-divider-line"></div>
+          </div>
+
+          <div class="cert-presented">This certificate is proudly presented to</div>
+          <div class="cert-name" id="certName">Student Name</div>
+          <div class="cert-name-underline"></div>
+
+          <div class="cert-for-text">for successfully completing</div>
+          <div class="cert-course-name">AI Tools Training Program</div>
+
+          <div class="cert-info-row">
+            <div class="cert-info-item">
+              <div class="cert-info-label">Date Issued</div>
+              <div class="cert-info-value" id="certDate">—</div>
+            </div>
+            <div class="cert-divider-v"></div>
+            <div class="cert-info-item">
+              <div class="cert-info-label">Score Achieved</div>
+              <div class="cert-info-value" id="certScore">—</div>
+            </div>
+            <div class="cert-divider-v"></div>
+            <div class="cert-info-item">
+              <div class="cert-info-label">Certificate ID</div>
+              <div class="cert-info-value" id="certId">—</div>
+            </div>
+          </div>
+
+          <!-- Signature — CEO Only, Centered -->
+          <div class="cert-sig-row">
+            <div class="cert-sig-block">
+              <img src="data:image/png;base64,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" class="ceo-sig-img" alt="Signature">
+              <div class="cert-sig-line"></div>
+              <div class="cert-sig-name">Mr. N Ashok Kumar</div>
+              <div class="cert-sig-label">CEO &amp; Founder</div>
+              <div class="cert-sig-company">Vstand4U Technologies Pvt. Ltd</div>
+            </div>
+          </div>
+
+        </div>
+        <div class="cert-bottomband"></div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn primary" onclick="downloadCertificate()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download PDF
+      </button>
+      <a href="/dashboard.html" class="action-btn secondary">← Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const CEO_SIGN_B64 = 'data:image/png;base64,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';
+
+let studentData = null;
+let progressData = null;
+
+async function init() {
+  const [meRes, progRes] = await Promise.all([fetch("/me"), fetch("/get-progress")]);
+  studentData = await meRes.json();
+  progressData = await progRes.json();
+  document.getElementById("loadingMsg").style.display = "none";
+  if (!progressData.certificateIssued) { document.getElementById("blockedMsg").style.display = "block"; return; }
+  document.getElementById("certSection").style.display = "block";
+  const certId = "VS-" + studentData._id.toString().slice(-8).toUpperCase();
+  const dateStr = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  document.getElementById("certName").textContent = studentData.name;
+  document.getElementById("certScore").textContent = progressData.testScore + "%";
+  document.getElementById("certDate").textContent = dateStr;
+  document.getElementById("certId").textContent = certId;
+}
+
+async function downloadCertificate() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const W = 297, H = 210;
+
+  doc.setFillColor(255,253,248); doc.rect(0,0,W,H,"F");
+  doc.setFillColor(26,20,16); doc.rect(0,0,W*.4,5,"F");
+  doc.setFillColor(184,134,27); doc.rect(W*.4,0,W*.3,5,"F");
+  doc.setFillColor(19,163,255); doc.rect(W*.7,0,W*.3,5,"F");
+  doc.setDrawColor(226,217,200); doc.setLineWidth(.4); doc.rect(8,8,W-16,H-16);
+  doc.setDrawColor(184,134,27); doc.setLineWidth(.3); doc.rect(11,11,W-22,H-22);
+
+  const corners=[[14,14],[W-14,14],[14,H-14],[W-14,H-14]];
+  doc.setDrawColor(184,134,27); doc.setLineWidth(1);
+  corners.forEach(([cx,cy],i)=>{const dx=i%2===0?1:-1,dy=i<2?1:-1;doc.line(cx,cy,cx+dx*10,cy);doc.line(cx,cy,cx,cy+dy*10);});
+
+  // Startup India logo (left)
+  doc.setFillColor(255,107,53); doc.roundedRect(16,14,48,13,1.5,1.5,"F");
+  doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
+  doc.text("STARTUP INDIA",40,19,{align:"center",charSpace:.5});
+  doc.setFont("helvetica","normal"); doc.setFontSize(5); doc.setTextColor(255,255,255);
+  doc.text("Initiative of Govt. of India",40,25,{align:"center"});
+
+  // MSME logo (right)
+  doc.setFillColor(26,74,155); doc.roundedRect(W-64,14,48,13,1.5,1.5,"F");
+  doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(255,255,255);
+  doc.text("MSME",W-40,21,{align:"center",charSpace:1});
+  doc.setFont("helvetica","normal"); doc.setFontSize(4.5); doc.setTextColor(255,255,255);
+  doc.text("Min. Micro, Small & Medium Enterprises",W-40,26,{align:"center"});
+
+  // Company name center top
+  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(19,163,255);
+  doc.text("Vstand4U",W/2,20,{align:"center"});
+  doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(122,110,98);
+  doc.text("Technologies Pvt. Ltd",W/2,26,{align:"center",charSpace:.3});
+
+  doc.setDrawColor(226,217,200); doc.setLineWidth(.3); doc.line(20,31,W-20,31);
+
+  doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(184,134,27);
+  doc.text("VSTAND4U TECHNOLOGIES PVT. LTD  ·  CERTIFICATE OF ACHIEVEMENT",W/2,38,{align:"center",charSpace:1});
+  doc.setFont("times","normal"); doc.setFontSize(26); doc.setTextColor(26,20,16);
+  doc.text("Certificate of Completion",W/2,52,{align:"center"});
+  doc.setFont("times","italic"); doc.setFontSize(10); doc.setTextColor(122,110,98);
+  doc.text("Awarded in recognition of successful course completion",W/2,60,{align:"center"});
+
+  doc.setDrawColor(226,217,200); doc.setLineWidth(.3);
+  doc.line(60,65,W/2-6,65); doc.line(W/2+6,65,W-60,65);
+  doc.setFillColor(184,134,27); doc.rect(W/2-2.5,62.5,5,5,"F");
+
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(122,110,98);
+  doc.text("This certificate is proudly presented to",W/2,73,{align:"center",charSpace:.5});
+
+  const certId="VS-"+studentData._id.toString().slice(-8).toUpperCase();
+  const dateStr=new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+
+  doc.setFont("times","bold"); doc.setFontSize(36); doc.setTextColor(26,20,16);
+  doc.text(studentData.name,W/2,89,{align:"center"});
+  const nw=doc.getTextWidth(studentData.name);
+  const lh=Math.min(nw*.55,70);
+  doc.setDrawColor(184,134,27); doc.setLineWidth(.8); doc.line(W/2-lh,92,W/2+lh,92);
+
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(122,110,98);
+  doc.text("for successfully completing",W/2,101,{align:"center"});
+  doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.setTextColor(26,20,16);
+  doc.text("AI Tools Training Program",W/2,110,{align:"center"});
+
+  doc.setDrawColor(226,217,200); doc.setLineWidth(.3); doc.line(55,117,W-55,117);
+  const infoItems=[{label:"DATE ISSUED",value:dateStr,x:W/2-65},{label:"SCORE ACHIEVED",value:progressData.testScore+"%",x:W/2},{label:"CERTIFICATE ID",value:certId,x:W/2+65}];
+  infoItems.forEach(item=>{
+    doc.setFont("helvetica","bold"); doc.setFontSize(6.5); doc.setTextColor(122,110,98);
+    doc.text(item.label,item.x,125,{align:"center",charSpace:1});
+    doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.setTextColor(26,20,16);
+    doc.text(item.value,item.x,133,{align:"center"});
+  });
+  doc.setDrawColor(226,217,200); doc.setLineWidth(.3);
+  doc.line(W/2-32,120,W/2-32,135); doc.line(W/2+32,120,W/2+32,135);
+
+  doc.setDrawColor(226,217,200); doc.setLineWidth(.3); doc.line(20,142,W-20,142);
+
+  // CEO Signature — centered
+  doc.addImage(CEO_SIGN_B64,"PNG",W/2-22,142,44,18,undefined,"FAST");
+  doc.setDrawColor(26,20,16); doc.setLineWidth(.4); doc.line(W/2-40,161,W/2+40,161);
+  doc.setFont("times","italic"); doc.setFontSize(11); doc.setTextColor(26,20,16);
+  doc.text("Mr. N Ashok Kumar",W/2,166,{align:"center"});
+  doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(122,110,98);
+  doc.text("CEO & FOUNDER",W/2,171,{align:"center",charSpace:.8});
+  doc.setFont("helvetica","normal"); doc.setFontSize(6.5); doc.setTextColor(122,110,98);
+  doc.text("Vstand4U Technologies Pvt. Ltd",W/2,176,{align:"center"});
+
+  doc.setDrawColor(184,134,27); doc.setLineWidth(.5); doc.line(40,H-10,W-40,H-10);
+
+  doc.save("Vstand4U_Certificate_"+studentData.name.replace(/\s+/g,"_")+".pdf");
+}
+
+init();
+</script>
+
+<script>
+const _dot=document.getElementById('cursorDot'),_ring=document.getElementById('cursorRing');
+let _mx=0,_my=0,_rx=0,_ry=0;
+document.addEventListener('mousemove',e=>{_mx=e.clientX;_my=e.clientY;_dot.style.left=_mx+'px';_dot.style.top=_my+'px';});
+function _animRing(){_rx+=(_mx-_rx)*.14;_ry+=(_my-_ry)*.14;_ring.style.left=_rx+'px';_ring.style.top=_ry+'px';requestAnimationFrame(_animRing);}
+_animRing();
+document.addEventListener('mouseover',e=>{if(e.target.matches('a,button,.action-btn'))_ring.classList.add('hover');else _ring.classList.remove('hover');});
+document.querySelectorAll('button,.action-btn').forEach(btn=>{
+  btn.addEventListener('click',function(e){
+    const r=document.createElement('span');r.className='ripple';
+    const rect=this.getBoundingClientRect();const size=Math.max(rect.width,rect.height);
+    r.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+    this.appendChild(r);setTimeout(()=>r.remove(),600);
+  });
+});
+</script>
+
+<footer>
+  <div class="footer-brand"><span class="v-u">V</span><span class="stand">stand4</span><span class="v-u">U</span> Technologies</div>
+  <div class="footer-info"><span>📍 2nd &amp; 3rd Floor, MTR Complex, 3968/3, Outer Ring Rd, Kasturi Nagar, Bengaluru, KA 560043</span></div>
+  <div class="footer-info" style="margin-top:.4rem">
+    <span>✉️ <a href="mailto:info@vstand4utechnologies.com">info@vstand4utechnologies.com</a></span>
+    <span class="footer-sep">|</span>
+    <span>📞 <a href="tel:08217453635">082174 53635</a></span>
+    <span class="footer-sep">|</span>
+    <span>🛠 Support: <a href="tel:9353669364">9353669364</a></span>
+  </div>
+  <div class="footer-copy">© 2025 Vstand4U Technologies Pvt. Ltd. All rights reserved.</div>
+</footer>
+</body>
+</html>

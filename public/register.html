@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register | Vstand4U</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0e1a;--card:#111827;--border:#1e2d4a;--accent:#13a3ff;--accent2:#0d7abf;--gold:#f59e0b;--text:#f1f5f9;--muted:#7a90a8;--error:#ef4444;--success:#22c55e}
+*{cursor:none!important}
+.cursor-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 10px rgba(19,163,255,.6)}
+.cursor-ring{width:36px;height:36px;border:2px solid rgba(19,163,255,.4);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .15s ease-out}
+.cursor-ring.hover{width:54px;height:54px;background:rgba(19,163,255,.07);border-color:var(--accent)}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow-x:hidden}
+.bg-canvas{position:fixed;inset:0;z-index:0}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.12;animation:blobFloat 9s ease-in-out infinite}
+.bg-blob.b1{width:600px;height:600px;background:radial-gradient(circle,#13a3ff,transparent);top:-150px;right:-100px}
+.bg-blob.b2{width:400px;height:400px;background:radial-gradient(circle,#8b5cf6,transparent);bottom:-100px;left:-80px;animation-delay:-4s}
+.bg-blob.b3{width:300px;height:300px;background:radial-gradient(circle,#f59e0b,transparent);top:40%;left:50%;transform:translate(-50%,-50%);animation-delay:-2s;opacity:.06}
+@keyframes blobFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-25px) scale(1.04)}}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(19,163,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(19,163,255,.03) 1px,transparent 1px);background-size:50px 50px;z-index:0}
+
+.container{width:100%;max-width:540px;position:relative;z-index:2}
+
+/* ── LOGO ── */
+.logo-wrap{text-align:center;margin-bottom:1.75rem}
+.logo-img{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2.5px solid rgba(19,163,255,0.5);box-shadow:0 0 32px rgba(19,163,255,0.35),0 0 64px rgba(19,163,255,0.1);animation:logoPulse 3s ease-in-out infinite;display:block;margin:0 auto 0.6rem}
+@keyframes logoPulse{0%,100%{box-shadow:0 0 32px rgba(19,163,255,0.35),0 0 64px rgba(19,163,255,0.1)}50%{box-shadow:0 0 44px rgba(19,163,255,0.55),0 0 80px rgba(19,163,255,0.18)}}
+.logo-text{font-family:'Outfit',sans-serif;font-size:2rem;font-weight:900;letter-spacing:-.03em}
+.logo-text .v-u{color:#13a3ff;text-shadow:0 0 24px rgba(19,163,255,.5)}
+.logo-text .stand{color:white}
+.logo-sub{font-size:.75rem;font-weight:600;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-top:.2rem}
+
+/* ── STEPS INDICATOR ── */
+.steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:1.75rem}
+.step-item{display:flex;flex-direction:column;align-items:center;gap:.35rem;position:relative}
+.step-num{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-weight:800;font-size:.9rem;transition:all .4s}
+.step-num.done{background:var(--success);color:#0a0e1a;box-shadow:0 4px 16px rgba(34,197,94,0.4)}
+.step-num.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(19,163,255,0.45)}
+.step-num.inactive{background:rgba(255,255,255,0.06);color:var(--muted);border:1.5px solid rgba(255,255,255,0.08)}
+.step-label{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+.step-label.active-lbl{color:var(--accent)}
+.step-connector{width:60px;height:2px;background:rgba(255,255,255,0.07);margin:0 4px;margin-bottom:18px;transition:background .4s}
+.step-connector.done{background:var(--success)}
+
+/* ── CARD ── */
+.card{background:rgba(17,24,39,.88);backdrop-filter:blur(30px);border:1px solid rgba(19,163,255,.15);border-radius:24px;padding:2.5rem;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative;overflow:hidden;animation:cardIn .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes cardIn{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:none}}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:shimmer 3s linear infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.panel{display:none}.panel.active{display:block;animation:panelIn .4s ease}
+@keyframes panelIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+h2{font-family:'Outfit',sans-serif;font-size:1.65rem;font-weight:800;margin-bottom:.2rem;letter-spacing:-.02em}
+.subtitle{color:var(--muted);font-size:.88rem;margin-bottom:1.75rem}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.fg{margin-bottom:1.1rem}
+label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:.42rem;text-transform:uppercase;letter-spacing:.08em}
+input{width:100%;background:rgba(255,255,255,.04);border:1.5px solid rgba(30,45,74,.9);border-radius:14px;padding:.85rem 1.1rem;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.95rem;transition:all .3s;outline:none}
+input:focus{border-color:var(--accent);background:rgba(19,163,255,.06);box-shadow:0 0 0 4px rgba(19,163,255,.12);transform:translateY(-1px)}
+input::placeholder{color:#2d4060}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:1rem;background:linear-gradient(135deg,#13a3ff,#0d7abf);border:none;border-radius:14px;color:white;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:800;letter-spacing:.03em;transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;box-shadow:0 4px 25px rgba(19,163,255,.35)}
+.btn:hover{transform:translateY(-3px) scale(1.01);box-shadow:0 10px 35px rgba(19,163,255,.5)}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.5;transform:none;box-shadow:none}
+.btn-gold{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 25px rgba(245,158,11,.35)}
+.btn-gold:hover{box-shadow:0 10px 35px rgba(245,158,11,.5)}
+.btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,0.12);color:var(--muted);box-shadow:none}
+.btn-outline:hover{border-color:var(--accent);color:var(--text);background:rgba(19,163,255,0.05);transform:translateY(-1px)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.75rem}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.3);transform:scale(0);animation:rippleA .6s linear;pointer-events:none}
+@keyframes rippleA{to{transform:scale(4);opacity:0}}
+
+/* ── PAYMENT PANEL ── */
+.pay-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--gold);font-size:.75rem;font-weight:700;padding:.3rem .8rem;border-radius:999px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1.25rem}
+.pay-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--gold);animation:blink 1.3s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.amount-badge{background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05));border:1px solid rgba(245,158,11,.3);border-radius:16px;padding:1rem 1.5rem;text-align:center;margin-bottom:1.5rem}
+.amount-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;font-weight:600}
+.amount-val{font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:900;color:var(--gold)}
+.amount-sub{font-size:.78rem;color:var(--muted);margin-top:.2rem}
+
+.qr-container{background:rgba(255,255,255,0.97);border-radius:20px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:1.25rem;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+#qrcode{display:flex;align-items:center;justify-content:center}
+.qr-upi{font-family:'Outfit',sans-serif;font-weight:800;font-size:.88rem;color:#0a0e1a;letter-spacing:.02em}
+.qr-note{font-size:.72rem;color:#4a5568;text-align:center}
+
+.upi-box{background:rgba(19,163,255,0.06);border:1px solid rgba(19,163,255,0.2);border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.upi-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:.2rem}
+.upi-id{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.05rem;color:var(--accent);letter-spacing:.02em}
+.copy-btn{background:rgba(19,163,255,0.12);border:1px solid rgba(19,163,255,0.25);color:var(--accent);padding:.4rem .9rem;border-radius:8px;font-size:.78rem;font-weight:700;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap}
+.copy-btn:hover{background:rgba(19,163,255,0.22);transform:translateY(-1px)}
+.copy-btn.copied{background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.3);color:var(--success)}
+
+.steps-list{margin-bottom:1.25rem}
+.pay-step{display:flex;align-items:flex-start;gap:.75rem;padding:.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:.84rem;color:var(--muted);line-height:1.5}
+.pay-step:last-child{border-bottom:none}
+.pay-step-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.68rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.05rem}
+
+.utr-section{margin-bottom:.75rem}
+.utr-note{font-size:.78rem;color:var(--muted);margin-bottom:.75rem;line-height:1.5;padding:.6rem .9rem;background:rgba(245,158,11,0.06);border-left:3px solid var(--gold);border-radius:0 8px 8px 0}
+
+/* ── MESSAGES ── */
+.msg{margin-top:1rem;padding:.9rem 1.1rem;border-radius:12px;font-size:.88rem;text-align:center;display:none;line-height:1.6;animation:msgPop .3s ease}
+@keyframes msgPop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.msg.error{background:rgba(239,68,68,.1);color:var(--error);border:1px solid rgba(239,68,68,.25)}
+.msg.success{background:rgba(34,197,94,.1);color:var(--success);border:1px solid rgba(34,197,94,.25)}
+
+.link{text-align:center;margin-top:1.4rem;font-size:.9rem;color:var(--muted);position:relative;z-index:2}
+.link a{color:var(--accent);text-decoration:none;font-weight:700}
+
+/* ── SUCCESS SCREEN ── */
+.success-screen{text-align:center;padding:1rem 0}
+.success-icon{font-size:4rem;margin-bottom:1rem;animation:iconBounce .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes iconBounce{from{transform:scale(0)}to{transform:scale(1)}}
+.success-title{font-family:'Outfit',sans-serif;font-size:1.65rem;font-weight:900;margin-bottom:.5rem;letter-spacing:-.02em}
+.success-msg{color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.5rem}
+.info-pills{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-bottom:1.5rem}
+.pill{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:999px;padding:.35rem .9rem;font-size:.78rem;color:var(--muted)}
+.pill strong{color:var(--text)}
+
+/* ── FOOTER ── */
+footer{position:relative;z-index:2;margin-top:2.5rem;width:100%;max-width:900px;text-align:center;padding:1.5rem 1rem;border-top:1px solid rgba(19,163,255,.08)}
+.footer-brand{font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:-.02em;margin-bottom:.75rem}
+.footer-brand .v-u{color:#13a3ff}.footer-brand .stand{color:white}
+.footer-info{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1rem;font-size:.78rem;color:var(--muted);line-height:1.6}
+.footer-info a{color:var(--muted);text-decoration:none}.footer-info a:hover{color:var(--accent)}
+.footer-sep{color:rgba(255,255,255,.1)}
+.footer-copy{margin-top:.75rem;font-size:.72rem;color:#3d5470}
+
+@media(max-width:480px){.row{grid-template-columns:1fr}.btn-row{grid-template-columns:1fr}.step-connector{width:32px}}
+</style>
+</head>
+<body>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="bg-canvas"><div class="bg-blob b1"></div><div class="bg-blob b2"></div><div class="bg-blob b3"></div></div>
+<div class="bg-grid"></div>
+
+<div class="container">
+  <!-- LOGO -->
+  <div class="logo-wrap">
+    <img src="/vs4u_logo.png" alt="Vstand4U Logo" class="logo-img">
+    <div class="logo-text"><span class="v-u">V</span><span class="stand">stand4</span><span class="v-u">U</span></div>
+    <div class="logo-sub">Technologies</div>
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div class="steps" id="stepsIndicator">
+    <div class="step-item">
+      <div class="step-num active" id="sn1">1</div>
+      <div class="step-label active-lbl" id="sl1">Details</div>
+    </div>
+    <div class="step-connector" id="sc1"></div>
+    <div class="step-item">
+      <div class="step-num inactive" id="sn2">2</div>
+      <div class="step-label" id="sl2">Payment</div>
+    </div>
+    <div class="step-connector" id="sc2"></div>
+    <div class="step-item">
+      <div class="step-num inactive" id="sn3">✓</div>
+      <div class="step-label" id="sl3">Done</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <!-- ══════════════ STEP 1: DETAILS ══════════════ -->
+    <div class="panel active" id="panel1">
+      <h2>Create Account 🚀</h2>
+      <p class="subtitle">Fill in your details to get started</p>
+      <div class="fg row">
+        <div><label>Full Name *</label><input type="text" id="name" placeholder="John Doe"></div>
+        <div><label>Phone *</label><input type="tel" id="phone" placeholder="+91 98765 43210"></div>
+      </div>
+      <div class="fg"><label>Email Address *</label><input type="email" id="email" placeholder="john@example.com"></div>
+      <div class="fg"><label>College / Institution</label><input type="text" id="college" placeholder="ABC Engineering College"></div>
+      <div class="fg"><label>Password *</label><input type="password" id="password" placeholder="Min. 6 characters"></div>
+      <button class="btn" onclick="goToPayment()">Next — Continue to Payment →</button>
+      <div class="msg" id="msg1"></div>
+    </div>
+
+    <!-- ══════════════ STEP 2: PAYMENT ══════════════ -->
+    <div class="panel" id="panel2">
+      <div class="pay-badge">💳 Secure Payment</div>
+      <h2>Complete Payment</h2>
+      <p class="subtitle">Pay ₹100 registration fee via UPI to proceed</p>
+
+      <div class="amount-badge">
+        <div class="amount-label">Registration Fee</div>
+        <div class="amount-val">₹ 100</div>
+        <div class="amount-sub">One-time payment · Non-refundable</div>
+      </div>
+
+      <!-- QR CODE -->
+      <div class="qr-container">
+        <div id="qrcode"></div>
+        <div class="qr-upi">Scan &amp; Pay ₹100</div>
+        <div class="qr-note">Works with any UPI app — GPay, PhonePe, Paytm, BHIM</div>
+      </div>
+
+      <!-- UPI ID COPY -->
+      <div class="upi-box">
+        <div>
+          <div class="upi-label">UPI ID</div>
+          <div class="upi-id">9972658141@ybl</div>
+        </div>
+        <button class="copy-btn" id="copyBtn" onclick="copyUPI()">Copy</button>
+      </div>
+
+      <!-- STEPS -->
+      <div class="steps-list">
+        <div class="pay-step"><div class="pay-step-num">1</div>Open any UPI app (GPay / PhonePe / Paytm)</div>
+        <div class="pay-step"><div class="pay-step-num">2</div>Scan the QR code above or enter UPI ID manually</div>
+        <div class="pay-step"><div class="pay-step-num">3</div>Pay exactly <strong style="color:var(--gold)">₹100</strong></div>
+        <div class="pay-step"><div class="pay-step-num">4</div>Note the 12-digit Transaction / UTR number from payment confirmation</div>
+        <div class="pay-step"><div class="pay-step-num">5</div>Enter it below and submit</div>
+      </div>
+
+      <!-- UTR INPUT -->
+      <div class="utr-section">
+        <div class="utr-note">⚠️ Enter the exact UTR / Transaction ID from your payment receipt. Incorrect IDs will delay approval.</div>
+        <div class="fg">
+          <label>Transaction ID / UTR Number *</label>
+          <input type="text" id="utrNo" placeholder="e.g. 123456789012" maxlength="30" style="font-family:'Outfit',sans-serif;font-size:1.05rem;letter-spacing:.04em;font-weight:700">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="backToDetails()">← Back</button>
+        <button class="btn btn-gold" id="submitBtn" onclick="submitRegistration()">Submit Registration</button>
+      </div>
+      <div class="msg" id="msg2"></div>
+    </div>
+
+    <!-- ══════════════ STEP 3: SUCCESS ══════════════ -->
+    <div class="panel" id="panel3">
+      <div class="success-screen">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Registration Submitted!</div>
+        <div class="success-msg">
+          Your registration and payment details have been sent for review.<br>
+          Please wait for admin approval before you can login.<br>
+          You'll be notified once your account is activated.
+        </div>
+        <div class="info-pills" id="summaryPills"></div>
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:1rem 1.25rem;text-align:left;margin-bottom:1.5rem">
+          <div style="font-size:.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem">⏳ What Happens Next?</div>
+          <div style="font-size:.84rem;color:var(--muted);line-height:1.7">1. Admin will verify your payment UTR / Transaction ID<br>2. Account gets approved (usually within 24 hours)<br>3. You can then login and access all courses</div>
+        </div>
+        <a href="/login.html" style="display:inline-block;padding:.85rem 2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;color:#fff;text-decoration:none;font-family:'Outfit',sans-serif;font-weight:800;font-size:.95rem;transition:all .2s;box-shadow:0 4px 20px rgba(19,163,255,0.35)">Go to Login →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="link" id="loginLink">Already have an account? <a href="/login.html">Sign In</a></div>
+</div>
+
+<footer>
+  <div class="footer-brand"><span class="v-u">V</span><span class="stand">stand4</span><span class="v-u">U</span> Technologies</div>
+  <div class="footer-info"><span>📍 2nd &amp; 3rd Floor, MTR Complex, 3968/3, Outer Ring Rd, Kasturi Nagar, Bengaluru, KA 560043</span></div>
+  <div class="footer-info" style="margin-top:.4rem">
+    <span>✉️ <a href="mailto:info@vstand4utechnologies.com">info@vstand4utechnologies.com</a></span>
+    <span class="footer-sep">|</span>
+    <span>📞 <a href="tel:08217453635">082174 53635</a></span>
+    <span class="footer-sep">|</span>
+    <span>🛠 Support: <a href="tel:9353669364">9353669364</a></span>
+  </div>
+  <div class="footer-copy">© 2024 Vstand4U Technologies. All rights reserved.</div>
+</footer>
+
+<script>
+// ── CURSOR ──
+const dot=document.getElementById('cursorDot'),ring=document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px'});
+(function aR(){rx+=(mx-rx)*.13;ry+=(my-ry)*.13;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(aR)})();
+document.addEventListener('mouseover',e=>{ring.classList[e.target.matches('a,button,input')?'add':'remove']('hover')});
+document.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',function(e){
+    const r=document.createElement('span');r.className='ripple';
+    const rect=this.getBoundingClientRect(),size=Math.max(rect.width,rect.height);
+    r.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+    this.appendChild(r);setTimeout(()=>r.remove(),600);
+  });
+});
+
+// ── GENERATE QR CODE ──
+// UPI deep link for ₹100 to 9972658141@ybl
+const upiLink = 'upi://pay?pa=9972658141@ybl&pn=Vstand4U%20Technologies&am=100&cu=INR&tn=Registration%20Fee';
+new QRCode(document.getElementById('qrcode'), {
+  text: upiLink,
+  width: 200, height: 200,
+  colorDark: '#0a0e1a',
+  colorLight: '#f7f7f7',
+  correctLevel: QRCode.CorrectLevel.H
+});
+
+// ── COPY UPI ──
+function copyUPI(){
+  navigator.clipboard.writeText('9972658141@ybl').then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.textContent='Copied ✓';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);
+  });
+}
+
+// ── STEP TRANSITIONS ──
+function setStep(n){
+  document.querySelectorAll('.panel').forEach((p,i)=>{p.classList.toggle('active',i+1===n)});
+  // Update indicators
+  [1,2,3].forEach(i=>{
+    const sn=document.getElementById('sn'+i);
+    const sl=document.getElementById('sl'+i);
+    if(i<n){sn.className='step-num done';sn.textContent='✓';sl.className='step-label'}
+    else if(i===n){sn.className='step-num active';sn.textContent=i===3?'✓':i;sl.className='step-label active-lbl'}
+    else{sn.className='step-num inactive';sn.textContent=i===3?'✓':i;sl.className='step-label'}
+  });
+  [1,2].forEach(i=>{document.getElementById('sc'+i).className='step-connector'+(i<n?' done':'')});
+  document.getElementById('loginLink').style.display=n===3?'none':'block';
+}
+
+// ── STEP 1 → 2 ──
+function goToPayment(){
+  const name=document.getElementById('name').value.trim();
+  const phone=document.getElementById('phone').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value;
+  if(!name||!email||!password){showMsg('msg1','Please fill all required fields','error');return}
+  if(!/\S+@\S+\.\S+/.test(email)){showMsg('msg1','Please enter a valid email','error');return}
+  if(password.length<6){showMsg('msg1','Password must be at least 6 characters','error');return}
+  if(!phone){showMsg('msg1','Please enter your phone number','error');return}
+  setStep(2);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function backToDetails(){setStep(1)}
+
+// ── STEP 2 → 3 (SUBMIT) ──
+async function submitRegistration(){
+  const utrNo=document.getElementById('utrNo').value.trim();
+  if(!utrNo){showMsg('msg2','Please enter your Transaction ID / UTR Number','error');return}
+  if(utrNo.length<8){showMsg('msg2','UTR / Transaction ID seems too short. Please check.','error');return}
+
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.textContent='Submitting…';
+
+  const name=document.getElementById('name').value.trim();
+  const phone=document.getElementById('phone').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const college=document.getElementById('college').value.trim();
+  const password=document.getElementById('password').value;
+
+  try{
+    const res=await fetch('/register',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,phone,email,college,password,utrNo,paymentAmount:100})
+    });
+    const data=await res.json();
+    if(data.success){
+      // Show summary pills
+      document.getElementById('summaryPills').innerHTML=[
+        `<div class="pill"><strong>Name:</strong> ${name}</div>`,
+        `<div class="pill"><strong>Email:</strong> ${email}</div>`,
+        `<div class="pill"><strong>UTR:</strong> ${utrNo}</div>`,
+        `<div class="pill"><strong>Amount:</strong> ₹100</div>`
+      ].join('');
+      setStep(3);
+      window.scrollTo({top:0,behavior:'smooth'});
+    } else {
+      showMsg('msg2',data.message,'error');
+      btn.disabled=false;btn.textContent='Submit Registration';
+    }
+  }catch(e){
+    showMsg('msg2','Network error. Please try again.','error');
+    btn.disabled=false;btn.textContent='Submit Registration';
+  }
+}
+
+function showMsg(id,text,type){
+  const m=document.getElementById(id);m.textContent=text;m.className='msg '+type;m.style.display='block';
+}
+</script>
+</body>
+</html>
