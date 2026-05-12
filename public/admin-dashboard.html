@@ -208,9 +208,9 @@
           <input type="number" id="videoOrder" placeholder="1" min="1">
         </div>
         <div>
-          <label>Video File (MP4)</label>
-          <input type="file" id="videoFile" accept="video/*">
-        </div>
+  <label>YouTube URL</label>
+  <input type="text" id="videoFile" placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX">
+</div>
       </div>
       <button class="btn btn-blue" onclick="uploadVideo()">Upload Video</button>
       <div class="alert" id="videoAlert"></div>
@@ -405,21 +405,20 @@ async function uploadVideo() {
   const title = document.getElementById("videoTitle").value.trim();
   const desc = document.getElementById("videoDesc").value.trim();
   const order = document.getElementById("videoOrder").value;
-  const file = document.getElementById("videoFile").files[0];
+  const youtubeUrl = document.getElementById("videoFile").value.trim();
 
-  if (!title || !file) { showAlert("videoAlert", "Please fill title and select a file", "error"); return; }
+  if (!title || !youtubeUrl) { showAlert("videoAlert", "Please fill title and YouTube URL", "error"); return; }
 
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("description", desc);
-  formData.append("order", order || 0);
-  formData.append("video", file);
-
-  const res = await fetch("/upload-video", { method: "POST", body: formData });
+  const res = await fetch("/upload-video", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",                          // 👈 this line added
+    body: JSON.stringify({ title, description: desc, youtubeUrl, order: order || 0 })
+});
   const data = await res.json();
 
   if (data.success) {
-    showAlert("videoAlert", "Video uploaded successfully!", "success");
+    showAlert("videoAlert", "Video saved successfully!", "success");
     document.getElementById("videoTitle").value = "";
     document.getElementById("videoDesc").value = "";
     document.getElementById("videoOrder").value = "";

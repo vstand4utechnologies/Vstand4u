@@ -2,9 +2,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const session = require("express-session");
-const multer = require("multer");
+
 const path = require("path");
-const fs = require("fs");
+
 
 const app = express();
 
@@ -12,12 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-    console.log("Uploads folder created at:", uploadsDir);
-}
-app.use("/uploads", express.static(uploadsDir));
+
 
 app.use(session({
     secret: "vstand4u-secret-key-2024",
@@ -45,7 +40,7 @@ const studentSchema = new mongoose.Schema({
 const Student = mongoose.model("Student", studentSchema);
 
 const videoSchema = new mongoose.Schema({
-    title: String, description: String, filename: String,
+    title: String, description: String, youtubeUrl: String,
     order: { type: Number, default: 0 }, uploadedAt: { type: Date, default: Date.now }
 });
 const Video = mongoose.model("Video", videoSchema);
@@ -53,11 +48,6 @@ const Video = mongoose.model("Video", videoSchema);
 const questionSchema = new mongoose.Schema({ question: String, options: [String], answer: Number });
 const Question = mongoose.model("Question", questionSchema);
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadsDir),
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-const upload = multer({ storage });
 
 function requireLogin(req, res, next) {
     if (req.session.studentId) return next();
@@ -155,20 +145,18 @@ app.post("/admin-login", (req, res) => {
 
 app.get("/admin-logout", (req, res) => { req.session.isAdmin = false; res.redirect("/admin-login.html"); });
 
-app.post("/upload-video", upload.single("video"), async (req, res) => {
+app.post("/upload-video", requireAdmin, async (req, res) => {
     try {
-        if (!req.session || !req.session.isAdmin) return res.json({ success: false, message: "Not authorized" });
-        const { title, description, order } = req.body;
-        if (!req.file) return res.json({ success: false, message: "No file uploaded" });
-        const video = new Video({ title, description, filename: req.file.filename, order: parseInt(order) || 0 });
+        const { title, description, youtubeUrl, order } = req.body;
+        if (!title || !youtubeUrl) return res.json({ success: false, message: "Title and YouTube URL are required" });
+        const video = new Video({ title, description, youtubeUrl, order: parseInt(order) || 0 });
         await video.save();
-        res.json({ success: true, message: "Video uploaded!" });
+        res.json({ success: true, message: "Video saved!" });
     } catch (err) { res.json({ success: false, message: err.message }); }
 });
 
 app.delete("/delete-video/:id", requireAdmin, async (req, res) => {
-    const video = await Video.findByIdAndDelete(req.params.id);
-    if (video) { const fp = path.join(__dirname, "uploads", video.filename); if (fs.existsSync(fp)) fs.unlinkSync(fp); }
+    await Video.findByIdAndDelete(req.params.id);
     res.json({ success: true });
 });
 

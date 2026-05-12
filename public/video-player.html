@@ -104,14 +104,20 @@
 <div class="main">
   <div class="video-title" id="videoTitle">Loading...</div>
   <div class="video-desc" id="videoDesc"></div>
+ 
+  <div class="player-wrap" style="position:relative; padding-bottom:56.25%; height:500px; max-height:500px; overflow:hidden; border-radius:16px; background:#000;">
+  <div id="youtubePlayer" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+  <div oncontextmenu="return false;" style="
+  position:absolute; top:0; left:0; width:100%; height:50px;
+  z-index:10; background:transparent;
+"></div>
+<div oncontextmenu="return false;" style="
+  position:absolute; bottom:0; left:0; width:100%; height:50px;
+  z-index:10; background:transparent;
+"></div>
+</div>
 
-  <div class="player-wrap">
-    <video id="videoPlayer" controls controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false;">
-      <source id="videoSrc" src="" type="video/mp4">
-    </video>
-  </div>
 
-  <div id="seekWarning">⚠️ You cannot skip ahead. Please watch the video fully.</div>
 
   <div class="completion-bar">
     <div class="watch-pct">Watched: <span id="watchedPct">0%</span> — Watch 90% to mark complete</div>
@@ -122,6 +128,7 @@
 </div>
 
 <script>
+// ── Cursor ───────────────────────────────────────────────────────────────────
 const dot = document.getElementById('cursorDot');
 const ring = document.getElementById('cursorRing');
 let mx = 0, my = 0, rx = 0, ry = 0;
@@ -141,14 +148,74 @@ document.querySelectorAll('button').forEach(btn => {
   });
 });
 
-const params = new URLSearchParams(window.location.search);
-const videoId = params.get("id");
-const player = document.getElementById("videoPlayer");
-
-let maxWatchedTime = 0;
+// ── State ─────────────────────────────────────────────────────────────────────
+const params   = new URLSearchParams(window.location.search);
+const videoId  = params.get("id");
+let ytPlayer   = null;
+let maxWatched = 0;
+let duration   = 0;
+let trackTimer = null;
 let alreadyCompleted = false;
-let videoDuration = 0;
 
+// ── Load YouTube IFrame API ───────────────────────────────────────────────────
+const ytScript = document.createElement('script');
+ytScript.src = "https://www.youtube.com/iframe_api";
+document.head.appendChild(ytScript);
+
+// Called automatically by YouTube when API is ready
+window.onYouTubeIframeAPIReady = function() {
+  if (window._pendingYTUrl) createPlayer(window._pendingYTUrl);
+};
+
+function getYouTubeId(url) {
+  const m = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function createPlayer(youtubeUrl) {
+  const ytId = getYouTubeId(youtubeUrl);
+  if (!ytId) { showAlert("Invalid YouTube URL for this video.", "error"); return; }
+
+  ytPlayer = new YT.Player('youtubePlayer', {
+    videoId: ytId,
+    playerVars: {
+      rel: 0,
+      modestbranding: 1,
+      controls: 1,
+      showinfo: 0,        // hides title bar on top
+      iv_load_policy: 3,  // hides annotations
+      fs: 0,              // disables fullscreen button (prevents going to YT)
+      disablekb: 1,       // disables keyboard shortcuts
+      playsinline: 1
+    },
+    events: {
+      onReady:       onPlayerReady,
+      onStateChange: onPlayerStateChange
+    }
+});
+}
+
+function onPlayerReady(event) {
+  duration = ytPlayer.getDuration();
+  trackTimer = setInterval(() => {
+    if (!ytPlayer || !duration) return;
+    const current = ytPlayer.getCurrentTime();
+    if (current > maxWatched) maxWatched = current;
+    const pct = Math.round((maxWatched / duration) * 100);
+    document.getElementById("watchedPct").textContent = pct + "%";
+    if (pct >= 90 && !alreadyCompleted) document.getElementById("completeBtn").classList.add("ready");
+  }, 1000);
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.ENDED) {
+    maxWatched = duration;
+    document.getElementById("watchedPct").textContent = "100%";
+    if (!alreadyCompleted) document.getElementById("completeBtn").classList.add("ready");
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   if (!videoId) return;
   const res = await fetch(`/video/${videoId}`);
@@ -157,62 +224,40 @@ async function init() {
 
   document.title = video.title + " | Vstand4U";
   document.getElementById("videoTitle").textContent = video.title;
-  document.getElementById("videoDesc").textContent = video.description || "";
-  document.getElementById("videoSrc").src = `/uploads/${video.filename}`;
-  document.getElementById("videoPlayer").load();
+  document.getElementById("videoDesc").textContent  = video.description || "";
 
   const progRes = await fetch("/get-progress");
-  const prog = await progRes.json();
+  const prog    = await progRes.json();
   if (prog.completedVideos.includes(videoId)) {
     alreadyCompleted = true;
     const btn = document.getElementById("completeBtn");
     btn.textContent = "✅ Already Completed";
     btn.classList.add("ready", "done");
   }
+
+  // If YT API already ready, create player now; else store URL for onYouTubeIframeAPIReady
+  if (typeof YT !== "undefined" && YT.Player) {
+    createPlayer(video.youtubeUrl);
+  } else {
+    window._pendingYTUrl = video.youtubeUrl;
+  }
 }
 
-player.addEventListener("loadedmetadata", () => { videoDuration = player.duration; });
-
-player.addEventListener("timeupdate", () => {
-  if (!player.duration) return;
-  if (player.currentTime > maxWatchedTime) maxWatchedTime = player.currentTime;
-  const pct = Math.round((maxWatchedTime / player.duration) * 100);
-  document.getElementById("watchedPct").textContent = pct + "%";
-  if (pct >= 90 && !alreadyCompleted) document.getElementById("completeBtn").classList.add("ready");
-});
-
-player.addEventListener("seeking", () => {
-  if (player.currentTime > maxWatchedTime + 1) {
-    player.currentTime = maxWatchedTime;
-    showSeekWarning();
-  }
-});
-
-player.addEventListener("contextmenu", (e) => { e.preventDefault(); return false; });
-
-document.addEventListener("keydown", (e) => {
-  if ((e.ctrlKey && e.key === "s") || (e.ctrlKey && e.key === "u") ||
-      (e.ctrlKey && e.key === "p") || (e.ctrlKey && e.shiftKey && e.key === "I") ||
-      (e.ctrlKey && e.shiftKey && e.key === "J") || e.key === "F12") {
-    e.preventDefault(); return false;
-  }
-});
-
-function showSeekWarning() {
-  const warn = document.getElementById("seekWarning");
-  warn.style.display = "block";
-  clearTimeout(window._warnTimer);
-  window._warnTimer = setTimeout(() => { warn.style.display = "none"; }, 2500);
-}
-
+// ── Mark complete ─────────────────────────────────────────────────────────────
 async function markComplete() {
   if (alreadyCompleted) return;
-  const res = await fetch("/complete-video", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ videoId }) });
+  const res  = await fetch("/complete-video", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ videoId })
+  });
   const data = await res.json();
   if (data.success) {
     alreadyCompleted = true;
+    clearInterval(trackTimer);
     const btn = document.getElementById("completeBtn");
-    btn.textContent = "✅ Completed!"; btn.classList.add("done");
+    btn.textContent = "✅ Completed!";
+    btn.classList.add("done");
     showAlert("Video marked as complete! Redirecting...", "success");
     setTimeout(() => window.location.href = "/dashboard.html", 2000);
   }
@@ -221,6 +266,11 @@ async function markComplete() {
 function showAlert(text, type) {
   const el = document.getElementById("alert");
   el.textContent = text; el.className = "alert " + type;
+}
+function handleOverlayClick() {
+  // Remove overlay on first click so player controls work
+  document.getElementById('playerOverlay').style.display = 'none';
+  ytPlayer.playVideo();
 }
 
 init();
